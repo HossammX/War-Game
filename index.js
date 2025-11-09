@@ -1,118 +1,81 @@
 let deckId
-
-// ✅ Global scores
 let computerScore = 0
 let playerScore = 0
 
-document.getElementById("new-deck").addEventListener("click", handleClick)
-document.getElementById("draw-cards").addEventListener("click", drawCards)
+const newDeckBtn = document.getElementById("new-deck")
+const drawCardsBtn = document.getElementById("draw-cards")
+const computerCardSlot = document.getElementById("computer-card-slot")
+const playerCardSlot = document.getElementById("player-card-slot")
+const header = document.getElementById("header")
+const remainingText = document.getElementById("remaining")
+const computerScoreEl = document.getElementById("computer-score")
+const playerScoreEl = document.getElementById("player-score")
 
-function handleClick() {
-  fetch("https://apis.scrimba.com/deckofcards/api/deck/new/shuffle/")
-    .then(res => res.json())
-    .then(data => {
-      console.log("New deck created:", data)
-      deckId = data.deck_id
+// Get new deck
+newDeckBtn.addEventListener("click", async () => {
+    const res = await fetch("https://deckofcardsapi.com/api/deck/new/shuffle/")
+    const data = await res.json()
+    deckId = data.deck_id
+    remainingText.textContent = data.remaining
+    header.textContent = "Game of War"
+    drawCardsBtn.disabled = false
+    drawCardsBtn.classList.remove("disabled")
+    computerScore = 0
+    playerScore = 0
+    computerScoreEl.textContent = 0
+    playerScoreEl.textContent = 0
+})
 
-      document.getElementById("remaining").textContent = `Remaining cards: ${data.remaining}`
+// Draw cards
+drawCardsBtn.addEventListener("click", async () => {
+    const res = await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=2`)
+    const data = await res.json()
+    const cards = data.cards
 
-      // Reset game state
-      document.getElementById("winner").textContent = ""
-      document.getElementById("top-card").innerHTML = ""
-      document.getElementById("bottom-card").innerHTML = ""
-      document.getElementById("top-card").classList.remove("winner", "tie")
-      document.getElementById("bottom-card").classList.remove("winner", "tie")
+    computerCardSlot.innerHTML = `<img src="${cards[0].image}" class="card" alt="computer card">`
+    playerCardSlot.innerHTML = `<img src="${cards[1].image}" class="card" alt="player card">`
 
-      // Reset scores
-      computerScore = 0
-      playerScore = 0
-      updateScores()
+    const winnerText = determineCardWinner(cards[0], cards[1])
+    header.textContent = winnerText
 
-      // Reset game title
-      document.getElementById("game-title").textContent = "Game of War"
+    remainingText.textContent = data.remaining
 
-      // Re-enable draw button
-      const drawBtn = document.getElementById("draw-cards")
-      drawBtn.disabled = false
-      drawBtn.classList.remove("disabled")
-    })
-}
+    if (data.remaining === 0) {
+        drawCardsBtn.disabled = true
+        drawCardsBtn.classList.add("disabled")
 
-function drawCards() {
-  fetch(`https://apis.scrimba.com/deckofcards/api/deck/${deckId}/draw/?count=2`)
-    .then(res => res.json())
-    .then(data => {
-      console.log("Cards drawn:", data.cards)
-      console.log("Remaining in deck:", data.remaining)
+        if (computerScore > playerScore) {
+            header.textContent = "Computer Wins the Game!"
+        } else if (playerScore > computerScore) {
+            header.textContent = "You Win the Game!"
+        } else {
+            header.textContent = "It's a Draw!"
+        }
+    }
+})
 
-      const card1 = data.cards[0]
-      const card2 = data.cards[1]
+// Determine winner per hand
+function determineCardWinner(card1, card2) {
+    const valueOptions = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "JACK", "QUEEN", "KING", "ACE"]
+    const card1ValueIndex = valueOptions.indexOf(card1.value)
+    const card2ValueIndex = valueOptions.indexOf(card2.value)
 
-      const topCard = document.getElementById("top-card")
-      const bottomCard = document.getElementById("bottom-card")
+    const card1Img = computerCardSlot.querySelector("img")
+    const card2Img = playerCardSlot.querySelector("img")
+    card1Img.classList.remove("winner")
+    card2Img.classList.remove("winner")
 
-      topCard.innerHTML = `<img src=${card1.image} alt="card">`
-      bottomCard.innerHTML = `<img src=${card2.image} alt="card">`
-
-      // Clear old effects
-      topCard.classList.remove("winner", "tie")
-      bottomCard.classList.remove("winner", "tie")
-
-      // Update remaining
-      document.getElementById("remaining").textContent = `Remaining cards: ${data.remaining}`
-
-      // Winner logic
-      const winnerText = determineWinner(card1, card2, topCard, bottomCard)
-      console.log("Round result:", winnerText)
-      document.getElementById("winner").textContent = winnerText
-
-      // Disable button if no cards left & show final winner
-      if (data.remaining === 0) {
-        const drawBtn = document.getElementById("draw-cards")
-        drawBtn.disabled = true
-        drawBtn.classList.add("disabled")
-        displayFinalWinner()
-      }
-    })
-}
-
-function determineWinner(card1, card2, topCard, bottomCard) {
-  const valueOptions = ["2","3","4","5","6","7","8","9","10","JACK","QUEEN","KING","ACE"]
-
-  const card1ValueIndex = valueOptions.indexOf(card1.value)
-  const card2ValueIndex = valueOptions.indexOf(card2.value)
-
-  if (card1ValueIndex > card2ValueIndex) {
-    topCard.classList.add("winner")
-    computerScore++
-    updateScores()
-    return "Computer Wins!"
-  } else if (card1ValueIndex < card2ValueIndex) {
-    bottomCard.classList.add("winner")
-    playerScore++
-    updateScores()
-    return "You Win!"
-  } else {
-    topCard.classList.add("tie")
-    bottomCard.classList.add("tie")
-    return "War!"
-  }
-}
-
-function updateScores() {
-  document.getElementById("computer-score").textContent = `Computer Score: ${computerScore}`
-  document.getElementById("player-score").textContent = `Your Score: ${playerScore}`
-}
-
-function displayFinalWinner() {
-  let finalMessage = ""
-  if (computerScore > playerScore) {
-    finalMessage = "Final Winner: Computer 🖥️"
-  } else if (playerScore > computerScore) {
-    finalMessage = "Final Winner: You 🎉"
-  } else {
-    finalMessage = "Final Result: It's a Tie 🤝"
-  }
-
-  document.getElementById("game-title").textContent = finalMessage
+    if (card1ValueIndex > card2ValueIndex) {
+        computerScore++
+        computerScoreEl.textContent = computerScore
+        card1Img.classList.add("winner")
+        return "Computer wins this round!"
+    } else if (card1ValueIndex < card2ValueIndex) {
+        playerScore++
+        playerScoreEl.textContent = playerScore
+        card2Img.classList.add("winner")
+        return "You win this round!"
+    } else {
+        return "War! It's a tie!"
+    }
 }
