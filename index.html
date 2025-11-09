@@ -1,31 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game of War</title>
-  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="game-container">
-    <h1>Game of War</h1>
-    <h2 id="header">Click “New Deck” to Start</h2>
+  <h1 id="game-title">Game of War</h1>
 
-    <button id="new-deck">New Deck</button>
-    <button id="draw-cards" disabled>Draw 2 Cards</button>
-
-    <div class="cards">
-      <div class="card-slot" id="computer-card-slot"></div>
-      <div class="card-slot" id="player-card-slot"></div>
+  <div id="game-board">
+    <!-- Computer section -->
+    <div class="player-section">
+      <p id="computer-score">Computer Score: 0</p>
+      <div id="top-card" class="card-slot"></div>
     </div>
 
-    <div class="scoreboard">
-      <p>Computer Score: <span id="computer-score">0</span></p>
-      <p>Your Score: <span id="player-score">0</span></p>
+    <!-- You section -->
+    <div class="player-section">
+      <div id="bottom-card" class="card-slot"></div>
+      <p id="player-score">Your Score: 0</p>
     </div>
-
-    <p class="remaining">Cards remaining: <span id="remaining">0</span></p>
   </div>
+
+  <div id="controls">
+    <button id="new-deck">New Deck</button>
+    <button id="draw-cards">Draw 2 Cards</button>
+  </div>
+
+  <p id="winner"></p>
+  <p id="remaining">Remaining cards: 0</p>
 
   <script src="index.js"></script>
 </body>
